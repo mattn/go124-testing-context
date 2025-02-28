@@ -1,8 +1,7 @@
 package main_test
 
 import (
-	//"sync"
-	"os"
+	"sync"
 	"testing"
 	"time"
 )
@@ -10,11 +9,19 @@ import (
 func TestSimple(t *testing.T) {
 	ctx := t.Context()
 
-	os.WriteFile("testing", []byte{}, 0644)
-	go func() {
-		<-ctx.Done()
-		os.Remove("testing")
-	}()
+	var wg sync.WaitGroup
+	t.Cleanup(wg.Wait)
+
+	for range 10 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			println("start")
+			<-ctx.Done()
+			println("shutdown")
+		}()
+	}
 
 	time.Sleep(3 * time.Second)
 }
